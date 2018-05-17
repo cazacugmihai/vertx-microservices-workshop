@@ -26,12 +26,13 @@ public class GeneratorConfigVerticle extends MicroServiceVerticle {
     JsonArray quotes = config().getJsonArray("companies");
     for (Object q : quotes) {
       JsonObject company = (JsonObject) q;
-      // Deploy the verticle with a configuration.
+    // Deploy another verticle without configuration.  
       vertx.deployVerticle(MarketDataVerticle.class.getName(), new DeploymentOptions().setConfig(company));
     }
 
-    // Deploy another verticle without configuration.
-    vertx.deployVerticle(RestQuoteAPIVerticle.class.getName());
+    
+    // Deploy the verticle with a configuration.
+    vertx.deployVerticle(RestQuoteAPIVerticle.class.getName(), new DeploymentOptions().setConfig(config()));
 
     // Publish the services in the discovery infrastructure.
     publishMessageSource("market-data", ADDRESS, rec -> {

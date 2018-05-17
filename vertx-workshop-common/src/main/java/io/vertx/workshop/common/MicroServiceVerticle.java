@@ -34,7 +34,7 @@ public class MicroServiceVerticle extends AbstractVerticle {
     publish(record, completionHandler);
   }
 
-  public void publishMessageSource(String name, String address, Class contentClass, Handler<AsyncResult<Void>>
+  public void publishMessageSource(String name, String address, Class<?> contentClass, Handler<AsyncResult<Void>>
       completionHandler) {
     Record record = MessageSource.createRecord(name, address, contentClass);
     publish(record, completionHandler);
@@ -46,13 +46,13 @@ public class MicroServiceVerticle extends AbstractVerticle {
     publish(record, completionHandler);
   }
 
-  public void publishEventBusService(String name, String address, Class serviceClass, Handler<AsyncResult<Void>>
+  public void publishEventBusService(String name, String address, Class<?> serviceClass, Handler<AsyncResult<Void>>
       completionHandler) {
     Record record = EventBusService.createRecord(name, address, serviceClass);
     publish(record, completionHandler);
   }
 
-  private void publish(Record record, Handler<AsyncResult<Void>> completionHandler) {
+  protected void publish(Record record, Handler<AsyncResult<Void>> completionHandler) {
     if (discovery == null) {
       try {
         start();
@@ -64,10 +64,8 @@ public class MicroServiceVerticle extends AbstractVerticle {
     discovery.publish(record, ar -> {
       if (ar.succeeded()) {
         registeredRecords.add(record);
-        completionHandler.handle(Future.succeededFuture());
-      } else {
-        completionHandler.handle(Future.failedFuture(ar.cause()));
       }
+      completionHandler.handle(ar.map((Void)null));
     });
   }
 
@@ -77,7 +75,7 @@ public class MicroServiceVerticle extends AbstractVerticle {
     for (Record record : registeredRecords) {
       Future<Void> unregistrationFuture = Future.future();
       futures.add(unregistrationFuture);
-      discovery.unpublish(record.getRegistration(), unregistrationFuture.completer());
+      discovery.unpublish(record.getRegistration(), unregistrationFuture);
     }
 
     if (futures.isEmpty()) {
